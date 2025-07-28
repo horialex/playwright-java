@@ -1,1 +1,0 @@
-[{"uid":"879814770dd8be17","name":"Register new account successfully","time":{"start":1753271821852,"stop":1753271838765,"duration":16913},"status":"passed","severity":"normal"},{"uid":"185c39a1dd048dc7","name":"testUserRegistration()","time":{"start":1753271840380,"stop":1753271846154,"duration":5774},"status":"passed","severity":"critical"}]

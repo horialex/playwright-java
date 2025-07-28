@@ -1,3 +1,0 @@
-"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
-"","16913","Register new account successfully","","Wed Jul 23 14:57:01 EEST 2025","passed","Wed Jul 23 14:57:18 EEST 2025","","tests.LoginTests","tests.LoginTests","testCreateAccount"
-"Verify that a new user can successfully register with valid credentials","5774","testUserRegistration()","","Wed Jul 23 14:57:20 EEST 2025","passed","Wed Jul 23 14:57:26 EEST 2025","","tests.RegistrationTest","tests.RegistrationTest","testUserRegistration"
