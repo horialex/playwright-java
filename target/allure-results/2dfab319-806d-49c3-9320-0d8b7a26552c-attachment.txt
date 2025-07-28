@@ -1,0 +1,5 @@
+Some products did not match the search term:
+Product name does not contain 'dress': SUEDE LOAFER, NAVY
+Product name does not contain 'dress': DORIAN PERFORATED OXFORD
+Product name does not contain 'dress': SLIM FIT DOBBY OXFORD SHIRT
+Product name does not contain 'dress': FRENCH CUFF COTTON TWILL OXFORD ==> expected: <true> but was: <false>

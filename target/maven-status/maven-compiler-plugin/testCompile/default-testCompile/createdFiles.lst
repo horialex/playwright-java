@@ -1,0 +1,3 @@
+base\BaseTest.class
+api\SearchApiTest.class
+tests\RegistrationTest.class

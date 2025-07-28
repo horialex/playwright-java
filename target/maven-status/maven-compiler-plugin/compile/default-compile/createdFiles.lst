@@ -1,0 +1,4 @@
+com\magento\pages\HomePage.class
+pages\BasePage.class
+utils\BrowserManager.class
+pages\HomePage\HomePage.class

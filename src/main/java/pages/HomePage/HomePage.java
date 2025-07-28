@@ -1,0 +1,163 @@
+package pages.HomePage;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.microsoft.playwright.Locator;
+import com.microsoft.playwright.Page;
+
+import pages.BasePage;
+
+public class HomePage extends BasePage {
+    // Header Locators
+    public Locator searchBox;
+    public Locator searchButton;
+    public Locator accountButton;
+    public Locator registerMenuButton;
+    public Locator firstNameInput;
+    public Locator lastNameInput;
+    public Locator passwordInput;
+    public Locator confirmPasswordInput;
+    public Locator registerButton;
+    public Locator emailInput;
+    public Locator signOutMenuButton;
+    public Locator loginMenuButton;
+    public Locator emailLoginInput;
+    public Locator passwordLoginInput;
+    public Locator loginButton;
+    public Locator welcomeMessage;
+    public Locator productNames;
+    
+    
+    // Constructor
+    public HomePage(Page page) {
+        super(page);
+        
+        // Initialize Header Locators
+        //this.searchBox = page.locator("#search");
+        this.searchBox = page.getByPlaceholder("Search entire store here...");
+        //this.searchButton = page.locator("button[title='Search']");
+        this.searchButton = page.getByRole(com.microsoft.playwright.options.AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Search"));
+        //this.accountButton = page.getByText("Account");
+        this.accountButton = page.locator("a.skip-account span.label");
+        this.registerMenuButton = page.getByText("Register");
+        this.firstNameInput = page.locator("input[name='firstname']");
+        this.lastNameInput = page.locator("input[name='lastname']");
+        this.emailInput = page.locator("#email_address");
+        this.passwordInput = page.locator("input[name='password']");
+        this.confirmPasswordInput = page.locator("input[name='confirmation']");
+        this.registerButton = page.locator("button[title='Register']");
+        
+        // Initialize Login Locators
+        this.signOutMenuButton= page.getByTitle("Log Out");
+        this.loginMenuButton = page.getByTitle("Log In");
+        this.emailLoginInput = page.getByTitle("Email Address");
+        this.passwordLoginInput = page.getByTitle("Password");
+        this.loginButton = page.getByRole(com.microsoft.playwright.options.AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Login"));
+        this.welcomeMessage = page.locator(".welcome-msg");
+
+        this.productNames = page.locator("h2.product-name > a");
+    }
+    
+    public void navigateToHomePage() {
+        navigateToUrl("http://qa3magento.dev.evozon.com/");
+    }
+    
+    public void createAccount(String firstName, String lastName, String email, String password) {
+        accountButton.click();
+        registerMenuButton.click();
+        firstNameInput.fill(firstName);
+        lastNameInput.fill(lastName);
+        emailInput.fill(email);
+        passwordInput.fill(password);
+        confirmPasswordInput.fill(password);
+        registerButton.scrollIntoViewIfNeeded();
+        registerButton.click();
+    }
+
+    public void validateAuthentication() {
+        String pageTitle = page.title();
+        String pageUrl = page.url();
+
+        System.out.println("Page title: " + pageTitle);
+        System.out.println("Page URL: " + pageUrl);
+
+        assertTrue(pageTitle.contains("My Account"), "Expected title to contain 'My Account' but was: " + pageTitle);
+        assertTrue(pageUrl.contains("/customer/account/"), "Expected URL to contain '/customer/account/' but was: " + pageUrl);
+    }
+
+    public void checkUserIsAuthenticated(String UserFirstName, String UserLastName){
+        Locator displayText = page.locator(".welcome-msg");
+        String actualText = displayText.innerText().trim();
+            assertEquals("WELCOME, " + UserFirstName.toUpperCase() + " " + UserLastName.toUpperCase() + "!", actualText, "The welcome message should match exactly.");
+    }
+
+    public void signOut() {
+        accountButton.click();
+        signOutMenuButton.click();
+        // Wait for the logout to complete
+        page.waitForURL("**/logoutSuccess/");
+        String pageTitle = page.title();
+        String pageUrl = page.url();
+        assertTrue(pageTitle.contains("Magento Commerce"), "Expected title to contain 'Magento Commerce' but was: " + pageTitle);
+        assertTrue(pageUrl.contains("/customer/account/logoutSuccess/"), "Expected URL to contain '/customer/account/logoutSuccess/' but was: " + pageUrl);
+    }
+
+    public void signIn(String email, String password) {
+        accountButton.click();
+        loginMenuButton.click();
+        page.waitForURL("**/customer/account/login/");
+        emailLoginInput.fill(email);
+        passwordLoginInput.fill(password);
+        loginButton.click();
+        page.waitForURL("**/customer/account/");
+        
+        // Verify welcome message is visible
+        //assertTrue(welcomeMessage.isVisible(), "Welcome message should be visible after successful login");
+    }
+
+    public void searchForProduct(String searchTerm) {
+        searchBox.fill(searchTerm);
+        searchButton.click();
+        
+        // Wait for the search results page to load
+        waitForPageLoad();
+        int productCount = productNames.count();
+        assertTrue(productCount > 0, "No products found!");
+
+        for (int i = 0; i < productCount; i++) {
+            String name = productNames.nth(i).innerText().toLowerCase();
+            assertTrue(name.contains(searchTerm),
+                "Product name does not contain '" + searchTerm + "': " + name);
+
+        }
+    }
+
+    public StringBuilder searchProduct(String searchTerm) {
+        searchBox.fill(searchTerm);
+        searchButton.click();
+        int count = productNames.count(); 
+        StringBuilder mismatchesProducts = new StringBuilder();
+        for (int i = 0; i < count; i++) {
+            String name = productNames.nth(i).innerText();
+            if (!name.toLowerCase().contains(searchTerm.toLowerCase())) {
+                mismatchesProducts.append("\nProduct name does not contain '")
+                         .append(searchTerm)
+                         .append("': ") 
+                         .append(name);
+            }
+        }
+        return mismatchesProducts;
+        //assertTrue(mismatchesProducts.length() == 0, "Some products did not match the search term:" + mismatchesProducts.toString());
+    }
+
+    public void addItemToCart(int index) {
+        // get all product containers
+        Locator products = page.locator("ul.products-grid > li.item");
+        Locator addToCartButton = products.nth(index).locator("button.btn-cart");
+        //Locator addToCartButton = products.nth(index).getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName("Add to Cart"));
+        addToCartButton.click();
+        // Optionally, wait for confirmation or cart update
+        page.waitForSelector(".success-msg");
+    }
+
+}
