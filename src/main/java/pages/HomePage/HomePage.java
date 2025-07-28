@@ -25,9 +25,16 @@ public class HomePage extends BasePage {
     public Locator passwordLoginInput;
     public Locator loginButton;
     public Locator welcomeMessage;
+
+    //buttons available after searching for a product
     public Locator productNames;
-    
-    
+    public Locator colourSwatch;
+    public Locator productSizeS;
+    public Locator addToCartSingleButton;
+    // get all product containers
+    public Locator product;
+    public Locator sizeSwatches;
+
     // Constructor
     public HomePage(Page page) {
         super(page);
@@ -56,6 +63,12 @@ public class HomePage extends BasePage {
         this.welcomeMessage = page.locator(".welcome-msg");
 
         this.productNames = page.locator("h2.product-name > a");
+        // Locate the first swatch-link inside the color swatch list and click it
+        this.colourSwatch = page.locator("#configurable_swatch_color a.swatch-link");
+        this.sizeSwatches = page.locator("#configurable_swatch_size a.swatch-link");
+        //this.productSizeS = page.getByRole(com.microsoft.playwright.options.AriaRole.LINK, new Page.GetByRoleOptions().setName("S"));
+        this.addToCartSingleButton = page.getByRole(com.microsoft.playwright.options.AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Add to Cart"));
+        this.product = page.locator("ul.products-grid > li.item");
     }
     
     public void navigateToHomePage() {
@@ -128,7 +141,6 @@ public class HomePage extends BasePage {
             String name = productNames.nth(i).innerText().toLowerCase();
             assertTrue(name.contains(searchTerm),
                 "Product name does not contain '" + searchTerm + "': " + name);
-
         }
     }
 
@@ -151,13 +163,21 @@ public class HomePage extends BasePage {
     }
 
     public void addItemToCart(int index) {
-        // get all product containers
-        Locator products = page.locator("ul.products-grid > li.item");
-        Locator addToCartButton = products.nth(index).locator("button.btn-cart");
-        //Locator addToCartButton = products.nth(index).getByRole(AriaRole.BUTTON, new Locator.GetByRoleOptions().setName("Add to Cart"));
-        addToCartButton.click();
-        // Optionally, wait for confirmation or cart update
-        page.waitForSelector(".success-msg");
+        
+        Locator addToCartButton = product.nth(index).locator("button.btn-cart");
+        Locator viewDetailsButton = product.nth(index).locator("a.button:has-text('View Details')");
+        if (addToCartButton.first().isVisible()) {
+            addToCartButton.click();
+            page.waitForSelector(".success-msg");
+        }
+        else {
+            viewDetailsButton.click();
+            //choose required options
+            colourSwatch.first().click();
+            sizeSwatches.first().click();
+            addToCartSingleButton.click();
+            page.waitForSelector(".success-msg");
+        }
     }
 
 }

@@ -1,0 +1,5 @@
+.allure/
+allure-report/
+allure-results/
+target/
+

@@ -1,4 +1,0 @@
-.vscode/
-/allure-report/
-/allure-results/
-/target/
