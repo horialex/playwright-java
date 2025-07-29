@@ -128,38 +128,24 @@ public class HomePage extends BasePage {
         //assertTrue(welcomeMessage.isVisible(), "Welcome message should be visible after successful login");
     }
 
-    public void searchForProduct(String searchTerm) {
-        searchBox.fill(searchTerm);
-        searchButton.click();
-        
-        // Wait for the search results page to load
-        waitForPageLoad();
-        int productCount = productNames.count();
-        assertTrue(productCount > 0, "No products found!");
-
-        for (int i = 0; i < productCount; i++) {
-            String name = productNames.nth(i).innerText().toLowerCase();
-            assertTrue(name.contains(searchTerm),
-                "Product name does not contain '" + searchTerm + "': " + name);
-        }
-    }
-
     public StringBuilder searchProduct(String searchTerm) {
         searchBox.fill(searchTerm);
         searchButton.click();
         int count = productNames.count(); 
-        StringBuilder mismatchesProducts = new StringBuilder();
+        StringBuilder mismatchedProducts = new StringBuilder();
         for (int i = 0; i < count; i++) {
             String name = productNames.nth(i).innerText();
+            //assertTrue(name.toLowerCase().contains(searchTerm.toLowerCase()),
+                        //"Product name does not contain '" + searchTerm + "': " + name);
             if (!name.toLowerCase().contains(searchTerm.toLowerCase())) {
-                mismatchesProducts.append("\nProduct name does not contain '")
+                mismatchedProducts.append("\nProduct name does not contain '")
                          .append(searchTerm)
                          .append("': ") 
                          .append(name);
             }
         }
-        return mismatchesProducts;
-        //assertTrue(mismatchesProducts.length() == 0, "Some products did not match the search term:" + mismatchesProducts.toString());
+        return mismatchedProducts;
+    
     }
 
     public void addItemToCart(int index) {

@@ -3,71 +3,38 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import com.microsoft.playwright.Tracing;
-
 import base.BaseTest;
-import constants.ProjectConstants;
 import io.qameta.allure.Allure;
 import io.qameta.allure.Description;
 import pages.HomePage.HomePage;
 
 public class SearchItemTest extends BaseTest {
     @Test
-    @Description("Verify that the search functionality returns expected results and items can be added to the cart")
-    public void addSearchedItemToCart() {
-        context.tracing().start(new Tracing.StartOptions()
+    @Description("Verify that the search functionality returns expected results")
+    public void SearchItem() {
+        /*context.tracing().start(new Tracing.StartOptions()
             .setScreenshots(true)
             .setSnapshots(true)
-            .setSources(true));
+            .setSources(true));*/
 
         HomePage homePage = new HomePage(page);
         homePage.navigateToHomePage();
         
-        StringBuilder mismatchesProducts = homePage.searchProduct("dress");
-        boolean searchItemWorksFine;
-        searchItemWorksFine = (mismatchesProducts.length()) == 0;
+        StringBuilder foundProducts = null;
+        foundProducts = homePage.searchProduct("dress");
+        takeScreenshotAndAttachToReport("searchedItem.png");
 
-        page.screenshot(new com.microsoft.playwright.Page.ScreenshotOptions()
-            .setPath(Paths.get(ProjectConstants.SCREENSHOT_PATH + "searchedItem.png"))
-            .setFullPage(true));
-
-        homePage.addItemToCart(1);
-        page.goBack();
-        page.goBack();
-        homePage.addItemToCart(2);
-        page.screenshot(new com.microsoft.playwright.Page.ScreenshotOptions()
-            .setPath(Paths.get(ProjectConstants.SCREENSHOT_PATH + "checkout.png"))
-            .setFullPage(true));
-        //assertTrue(searchItemWorksFine, "Some products did not match the search term:" + mismatchesProducts.toString());
-
-        String[] imageNames = {"searchedItem.png", "checkout.png"};
-
-        for (String imageName : imageNames) {
-            try {
-                Allure.addAttachment(
-                    imageName, // Use the image file name as the attachment name
-                    "image/png",
-                    Files.newInputStream(Paths.get(ProjectConstants.SCREENSHOT_PATH + imageName)),
-                    ".png"
-                );
-            } catch (java.io.IOException e) {
-                e.printStackTrace();
-            }
-    }   
-        context.tracing().stop(new Tracing.StopOptions()
-            .setPath(Paths.get("trace.zip")));      
-    }
-
-    @Test 
-    public void addItemToCart() {
-        
+        if (foundProducts.length() > 0) {
+            Allure.addAttachment("All mismatched products", foundProducts.toString());
+            throw new AssertionError("Some products did not match the search term:\n" + foundProducts);
+        } 
+        /*context.tracing().stop(new Tracing.StopOptions()
+            .setPath(Paths.get("trace.zip")));     */
     }
 
     @Test
@@ -89,5 +56,18 @@ public class SearchItemTest extends BaseTest {
         System.out.println(response.body().contains(searchTerm));
         assertTrue(response.body().contains(searchTerm), "Search results should contain the search term");
     } 
+
+    @Test
+    @Description("Verify that items can be added to cart after searching")
+    public void addItemToCart() {
+        HomePage homePage = new HomePage(page);
+        homePage.navigateToHomePage();
+        homePage.searchProduct("dress");
+        homePage.addItemToCart(1);
+        page.goBack();
+        page.goBack();
+        homePage.addItemToCart(2);
+        takeScreenshotAndAttachToReport("checkout.png");
+    }
 
 }

@@ -1,7 +1,10 @@
 package tests;
 import java.nio.file.Paths;
 
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
@@ -12,7 +15,7 @@ import constants.ProjectConstants;
 import io.qameta.allure.Description;
 import pages.HomePage.HomePage;
 
-//@Feature("User Registration and Authentication")
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class RegistrationTest extends BaseTest {
     // Store credentials for reuse across tests
     private static String userEmail;
@@ -22,6 +25,7 @@ public class RegistrationTest extends BaseTest {
     
     @Test
     @Description("Verify that a new user can successfully register with valid credentials")
+    @Order(1)
     public void testUserRegistration() {
         HomePage homePage = new HomePage(page);
         homePage.navigateToHomePage();
@@ -48,6 +52,7 @@ public class RegistrationTest extends BaseTest {
     
     @Test
     @Description("Verify a previously saved context can be used for authentication.")
+    @Order(2)
     public void UseExistingContext() { 
         // Create a new context with the saved storage state
         BrowserContext newContext = browser.newContext(
