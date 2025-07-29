@@ -5,6 +5,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -13,7 +14,13 @@ import io.qameta.allure.Allure;
 import io.qameta.allure.Description;
 import pages.HomePage.HomePage;
 
-public class SearchItemTest extends BaseTest {
+public class ProductsTests extends BaseTest {
+    @Override
+    @BeforeEach
+    public void setUp() {
+        this.storageStatePath = "LoginState.json";
+        super.setUp();
+    }
     @Test
     @Description("Verify that the search functionality returns expected results")
     public void SearchItem() {
@@ -69,5 +76,14 @@ public class SearchItemTest extends BaseTest {
         homePage.addItemToCart(2);
         takeScreenshotAndAttachToReport("checkout.png");
     }
-
+    
+    @Test
+    @Description("Verify that items can be added to wishlist after searching")
+    public void addItemToWishlist() {
+        HomePage homePage = new HomePage(page);
+        homePage.navigateToHomePage();
+        homePage.searchProduct("coat");
+        homePage.addItemToWishlistWhileLoggedIn(0);
+        takeScreenshotAndAttachToReport("wishlist.png");
+    }
 }

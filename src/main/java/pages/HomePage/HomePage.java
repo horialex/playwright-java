@@ -34,6 +34,7 @@ public class HomePage extends BasePage {
     // get all product containers
     public Locator product;
     public Locator sizeSwatches;
+    public Locator addToWishlistButton;
 
     // Constructor
     public HomePage(Page page) {
@@ -69,6 +70,7 @@ public class HomePage extends BasePage {
         //this.productSizeS = page.getByRole(com.microsoft.playwright.options.AriaRole.LINK, new Page.GetByRoleOptions().setName("S"));
         this.addToCartSingleButton = page.getByRole(com.microsoft.playwright.options.AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Add to Cart"));
         this.product = page.locator("ul.products-grid > li.item");
+        this.addToWishlistButton = page.getByRole(com.microsoft.playwright.options.AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Add to Wishlist"));
     }
     
     public void navigateToHomePage() {
@@ -149,7 +151,6 @@ public class HomePage extends BasePage {
     }
 
     public void addItemToCart(int index) {
-        
         Locator addToCartButton = product.nth(index).locator("button.btn-cart");
         Locator viewDetailsButton = product.nth(index).locator("a.button:has-text('View Details')");
         if (addToCartButton.first().isVisible()) {
@@ -166,4 +167,10 @@ public class HomePage extends BasePage {
         }
     }
 
+    public void addItemToWishlistWhileLoggedIn(int productIndex) {
+        Locator wishlistButton = product.nth(productIndex).locator("text=Add to Wishlist");
+        wishlistButton.click();
+        Locator successMsg = page.locator(".success-msg span");
+        assertTrue(successMsg.isVisible(), "Success message should be visible");
+    }   
 }

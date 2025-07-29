@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
+import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 
@@ -19,15 +20,20 @@ public class BaseTest {
     protected Browser browser;
     protected BrowserContext context;
     protected Page page;
+    protected String storageStatePath = null; 
 
     @BeforeEach
     public void setUp() {
         playwright = Playwright.create();
-        /*browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
+        browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
             .setHeadless(false)
-            .setSlowMo(600)); */
-        browser = playwright.chromium().launch();
-        context = browser.newContext();
+            .setSlowMo(600));
+        if (storageStatePath != null) {
+            context = browser.newContext(
+                new Browser.NewContextOptions().setStorageStatePath(Paths.get(storageStatePath)));
+        } else {
+            context = browser.newContext();
+        }
         page = context.newPage();
     }
 
@@ -49,7 +55,8 @@ public class BaseTest {
                 "image/png",
                 Files.newInputStream(Paths.get(ProjectConstants.SCREENSHOT_PATH + screenshotName)),
                 ".png"
-            );
+            ); 
+            
         } catch (java.io.IOException e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to attach screenshot", e);
