@@ -7,6 +7,8 @@ import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 
+import utils.EnvConfig;
+
 public class BrowserConfig {
     protected String browserName;
     protected boolean headless;
@@ -17,12 +19,39 @@ public class BrowserConfig {
     protected Browser browser;
     protected BrowserContext context;
     protected Page page;
+    protected String device;
+
+    protected int defaultTimeout;
+    protected int navigationTimeout;
 
     public BrowserConfig() {
-        this.browserName = System.getProperty("browser", "chromium").toLowerCase();
-        this.headless = Boolean.parseBoolean(System.getProperty("headless", "false"));
-        this.slowMo = Integer.parseInt(System.getProperty("slowMo", "200"));
+        this.browserName = EnvConfig.get("BROWSER").toLowerCase();
+        this.headless = Boolean.parseBoolean(EnvConfig.get("HEADLESS"));
+        this.slowMo = Integer.parseInt(EnvConfig.get("SLOW_MO"));
+
         this.storageStatePath = System.getProperty("storageStatePath"); // optional
+        this.device = EnvConfig.get("DEVICE");
+        this.defaultTimeout = Integer.parseInt(EnvConfig.get("DEFAULT_TIMEOUT"));
+        this.navigationTimeout = Integer.parseInt(EnvConfig.get("NAVIGATION_TIMEOUT"));
+    }
+
+    private Browser.NewContextOptions getDeviceContextOptions() {
+        switch (device.toLowerCase()) {
+            case "mobile":
+                return new Browser.NewContextOptions()
+                        .setViewportSize(375, 667)
+                        .setIsMobile(true)
+                        .setHasTouch(true)
+                        .setUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 13_2 like Mac OS X)");
+            case "tablet":
+                return new Browser.NewContextOptions()
+                        .setViewportSize(768, 1024)
+                        .setUserAgent("Mozilla/5.0 (iPad; CPU OS 13_2 like Mac OS X)");
+            case "web":
+            default:
+                return new Browser.NewContextOptions()
+                        .setViewportSize(1920, 1080);
+        }
     }
 
     public void launch() {
@@ -45,12 +74,15 @@ public class BrowserConfig {
                 break;
         }
 
+        Browser.NewContextOptions contextOptions = getDeviceContextOptions();
+
         if (storageStatePath != null) {
-            context = browser.newContext(
-                    new Browser.NewContextOptions().setStorageStatePath(Paths.get(storageStatePath)));
-        } else {
-            context = browser.newContext();
+            contextOptions.setStorageStatePath(Paths.get(storageStatePath));
         }
+
+        context = browser.newContext(contextOptions);
+        context.setDefaultTimeout(defaultTimeout);
+        context.setDefaultNavigationTimeout(navigationTimeout);
 
         page = context.newPage();
     }

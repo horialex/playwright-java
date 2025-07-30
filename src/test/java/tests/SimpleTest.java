@@ -1,5 +1,6 @@
 package tests;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import com.microsoft.playwright.junit.UsePlaywright;
@@ -14,23 +15,25 @@ public class SimpleTest extends BaseTest {
     public void simpleTest1() {
         HomePage homePage = new HomePage(page);
         homePage.navigateToHomePage();
-        takeScreenshotAndAttachToReport("wishlist");
+        page.pause();
     }
 
-    @Test
-    @Description("Basic Simple test 2")
-    public void simpleTest2() {
-        HomePage homePage = new HomePage(page);
-        homePage.navigateToHomePage();
-        takeScreenshotAndAttachToReport("wishlist");
-    }
+    // @Test
+    // @Disabled
+    // @Description("Basic Simple test 2")
+    // public void simpleTest2() {
+    // HomePage homePage = new HomePage(page);
+    // homePage.navigateToHomePage();
+    // takeScreenshotAndAttachToReport("wishlist2");
+    // }
 
-    @Test
-    @Description("Basic Simple test 3")
-    public void simpleTest3() {
-        HomePage homePage = new HomePage(page);
-        homePage.navigateToHomePage();
-        takeScreenshotAndAttachToReport("wishlist");
-    }
+    // @Test
+    // @Disabled
+    // @Description("Basic Simple test 3")
+    // public void simpleTest3() {
+    // HomePage homePage = new HomePage(page);
+    // homePage.navigateToHomePage();
+    // takeScreenshotAndAttachToReport("wishlist3");
+    // }
 
 }
