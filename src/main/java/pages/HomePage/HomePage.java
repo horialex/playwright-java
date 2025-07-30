@@ -1,4 +1,5 @@
 package pages.HomePage;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -6,6 +7,7 @@ import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 
 import pages.BasePage;
+import utils.EnvConfig;
 
 public class HomePage extends BasePage {
     // Header Locators
@@ -26,7 +28,7 @@ public class HomePage extends BasePage {
     public Locator loginButton;
     public Locator welcomeMessage;
 
-    //buttons available after searching for a product
+    // buttons available after searching for a product
     public Locator productNames;
     public Locator colourSwatch;
     public Locator productSizeS;
@@ -39,13 +41,14 @@ public class HomePage extends BasePage {
     // Constructor
     public HomePage(Page page) {
         super(page);
-        
+
         // Initialize Header Locators
-        //this.searchBox = page.locator("#search");
+        // this.searchBox = page.locator("#search");
         this.searchBox = page.getByPlaceholder("Search entire store here...");
-        //this.searchButton = page.locator("button[title='Search']");
-        this.searchButton = page.getByRole(com.microsoft.playwright.options.AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Search"));
-        //this.accountButton = page.getByText("Account");
+        // this.searchButton = page.locator("button[title='Search']");
+        this.searchButton = page.getByRole(com.microsoft.playwright.options.AriaRole.BUTTON,
+                new Page.GetByRoleOptions().setName("Search"));
+        // this.accountButton = page.getByText("Account");
         this.accountButton = page.locator("a.skip-account span.label");
         this.registerMenuButton = page.getByText("Register");
         this.firstNameInput = page.locator("input[name='firstname']");
@@ -54,29 +57,35 @@ public class HomePage extends BasePage {
         this.passwordInput = page.locator("input[name='password']");
         this.confirmPasswordInput = page.locator("input[name='confirmation']");
         this.registerButton = page.locator("button[title='Register']");
-        
+
         // Initialize Login Locators
-        this.signOutMenuButton= page.getByTitle("Log Out");
+        this.signOutMenuButton = page.getByTitle("Log Out");
         this.loginMenuButton = page.getByTitle("Log In");
         this.emailLoginInput = page.getByTitle("Email Address");
         this.passwordLoginInput = page.getByTitle("Password");
-        this.loginButton = page.getByRole(com.microsoft.playwright.options.AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Login"));
+        this.loginButton = page.getByRole(com.microsoft.playwright.options.AriaRole.BUTTON,
+                new Page.GetByRoleOptions().setName("Login"));
         this.welcomeMessage = page.locator(".welcome-msg");
 
         this.productNames = page.locator("h2.product-name > a");
         // Locate the first swatch-link inside the color swatch list and click it
         this.colourSwatch = page.locator("#configurable_swatch_color a.swatch-link");
         this.sizeSwatches = page.locator("#configurable_swatch_size a.swatch-link");
-        //this.productSizeS = page.getByRole(com.microsoft.playwright.options.AriaRole.LINK, new Page.GetByRoleOptions().setName("S"));
-        this.addToCartSingleButton = page.getByRole(com.microsoft.playwright.options.AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Add to Cart"));
+        // this.productSizeS =
+        // page.getByRole(com.microsoft.playwright.options.AriaRole.LINK, new
+        // Page.GetByRoleOptions().setName("S"));
+        this.addToCartSingleButton = page.getByRole(com.microsoft.playwright.options.AriaRole.BUTTON,
+                new Page.GetByRoleOptions().setName("Add to Cart"));
         this.product = page.locator("ul.products-grid > li.item");
-        this.addToWishlistButton = page.getByRole(com.microsoft.playwright.options.AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Add to Wishlist"));
+        this.addToWishlistButton = page.getByRole(com.microsoft.playwright.options.AriaRole.BUTTON,
+                new Page.GetByRoleOptions().setName("Add to Wishlist"));
     }
-    
+
     public void navigateToHomePage() {
-        navigateToUrl("http://qa3magento.dev.evozon.com/");
+        String baseUrl = EnvConfig.get("APP_HOST");
+        navigateToUrl(baseUrl + "/");
     }
-    
+
     public void createAccount(String firstName, String lastName, String email, String password) {
         accountButton.click();
         registerMenuButton.click();
@@ -97,13 +106,15 @@ public class HomePage extends BasePage {
         System.out.println("Page URL: " + pageUrl);
 
         assertTrue(pageTitle.contains("My Account"), "Expected title to contain 'My Account' but was: " + pageTitle);
-        assertTrue(pageUrl.contains("/customer/account/"), "Expected URL to contain '/customer/account/' but was: " + pageUrl);
+        assertTrue(pageUrl.contains("/customer/account/"),
+                "Expected URL to contain '/customer/account/' but was: " + pageUrl);
     }
 
-    public void checkUserIsAuthenticated(String UserFirstName, String UserLastName){
+    public void checkUserIsAuthenticated(String UserFirstName, String UserLastName) {
         Locator displayText = page.locator(".welcome-msg");
         String actualText = displayText.innerText().trim();
-            assertEquals("WELCOME, " + UserFirstName.toUpperCase() + " " + UserLastName.toUpperCase() + "!", actualText, "The welcome message should match exactly.");
+        assertEquals("WELCOME, " + UserFirstName.toUpperCase() + " " + UserLastName.toUpperCase() + "!", actualText,
+                "The welcome message should match exactly.");
     }
 
     public void signOut() {
@@ -113,8 +124,10 @@ public class HomePage extends BasePage {
         page.waitForURL("**/logoutSuccess/");
         String pageTitle = page.title();
         String pageUrl = page.url();
-        assertTrue(pageTitle.contains("Magento Commerce"), "Expected title to contain 'Magento Commerce' but was: " + pageTitle);
-        assertTrue(pageUrl.contains("/customer/account/logoutSuccess/"), "Expected URL to contain '/customer/account/logoutSuccess/' but was: " + pageUrl);
+        assertTrue(pageTitle.contains("Magento Commerce"),
+                "Expected title to contain 'Magento Commerce' but was: " + pageTitle);
+        assertTrue(pageUrl.contains("/customer/account/logoutSuccess/"),
+                "Expected URL to contain '/customer/account/logoutSuccess/' but was: " + pageUrl);
     }
 
     public void signIn(String email, String password) {
@@ -125,29 +138,30 @@ public class HomePage extends BasePage {
         passwordLoginInput.fill(password);
         loginButton.click();
         page.waitForURL("**/customer/account/");
-        
+
         // Verify welcome message is visible
-        //assertTrue(welcomeMessage.isVisible(), "Welcome message should be visible after successful login");
+        // assertTrue(welcomeMessage.isVisible(), "Welcome message should be visible
+        // after successful login");
     }
 
     public StringBuilder searchProduct(String searchTerm) {
         searchBox.fill(searchTerm);
         searchButton.click();
-        int count = productNames.count(); 
+        int count = productNames.count();
         StringBuilder mismatchedProducts = new StringBuilder();
         for (int i = 0; i < count; i++) {
             String name = productNames.nth(i).innerText();
-            //assertTrue(name.toLowerCase().contains(searchTerm.toLowerCase()),
-                        //"Product name does not contain '" + searchTerm + "': " + name);
+            // assertTrue(name.toLowerCase().contains(searchTerm.toLowerCase()),
+            // "Product name does not contain '" + searchTerm + "': " + name);
             if (!name.toLowerCase().contains(searchTerm.toLowerCase())) {
                 mismatchedProducts.append("\nProduct name does not contain '")
-                         .append(searchTerm)
-                         .append("': ") 
-                         .append(name);
+                        .append(searchTerm)
+                        .append("': ")
+                        .append(name);
             }
         }
         return mismatchedProducts;
-    
+
     }
 
     public void addItemToCart(int index) {
@@ -156,10 +170,9 @@ public class HomePage extends BasePage {
         if (addToCartButton.first().isVisible()) {
             addToCartButton.click();
             page.waitForSelector(".success-msg");
-        }
-        else {
+        } else {
             viewDetailsButton.click();
-            //choose required options
+            // choose required options
             colourSwatch.first().click();
             sizeSwatches.first().click();
             addToCartSingleButton.click();
@@ -172,5 +185,5 @@ public class HomePage extends BasePage {
         wishlistButton.click();
         Locator successMsg = page.locator(".success-msg span");
         assertTrue(successMsg.isVisible(), "Success message should be visible");
-    }   
+    }
 }

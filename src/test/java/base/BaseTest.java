@@ -1,65 +1,67 @@
 package base;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-
-import com.microsoft.playwright.Browser;
-import com.microsoft.playwright.BrowserContext;
-import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.Page;
-import com.microsoft.playwright.Playwright;
-
 import constants.ProjectConstants;
 import io.qameta.allure.Allure;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestInfo;
+
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class BaseTest {
-    protected Playwright playwright;
-    protected Browser browser;
-    protected BrowserContext context;
+    protected TestInfo testInfo;
+    protected BrowserConfig browserConfig;
     protected Page page;
-    protected String storageStatePath = null; 
 
     @BeforeEach
-    public void setUp() {
-        playwright = Playwright.create();
-        browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
-            .setHeadless(false)
-            .setSlowMo(600));
-        if (storageStatePath != null) {
-            context = browser.newContext(
-                new Browser.NewContextOptions().setStorageStatePath(Paths.get(storageStatePath)));
-        } else {
-            context = browser.newContext();
-        }
-        page = context.newPage();
+    public void setUp(TestInfo testInfo) {
+        this.testInfo = testInfo;
+        browserConfig = new BrowserConfig();
+        browserConfig.launch();
+        page = browserConfig.getPage();
     }
 
     @AfterEach
     public void tearDown() {
-        if (page != null) page.close();
-        if (context != null) context.close();
-        if (browser != null) browser.close();
-        if (playwright != null) playwright.close();
+        if (browserConfig != null) {
+            browserConfig.close();
+        }
     }
 
     protected void takeScreenshotAndAttachToReport(String screenshotName) {
-        page.screenshot(new com.microsoft.playwright.Page.ScreenshotOptions()
-            .setPath(Paths.get(ProjectConstants.SCREENSHOT_PATH + screenshotName))
-            .setFullPage(true));
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_SSS"));
+
+        String className = testInfo.getTestClass()
+                .map(Class::getSimpleName)
+                .orElse("UnknownClass");
+
+        String methodName = testInfo.getTestMethod()
+                .map(Method::getName)
+                .orElse("unknownTest");
+
+        String uniqueName = className + "_" + methodName + "_" + screenshotName + "_" + timestamp;
+        String fullPath = ProjectConstants.SCREENSHOT_PATH + uniqueName + ".png";
+
         try {
+            page.screenshot(new Page.ScreenshotOptions()
+                    .setPath(Paths.get(fullPath))
+                    .setFullPage(true));
+
             Allure.addAttachment(
-                screenshotName, 
-                "image/png",
-                Files.newInputStream(Paths.get(ProjectConstants.SCREENSHOT_PATH + screenshotName)),
-                ".png"
-            ); 
-            
-        } catch (java.io.IOException e) {
+                    uniqueName,
+                    "image/png",
+                    Files.newInputStream(Paths.get(fullPath)),
+                    ".png");
+
+        } catch (IOException e) {
             e.printStackTrace();
-            throw new RuntimeException("Failed to attach screenshot", e);
+            throw new RuntimeException("Failed to take or attach screenshot", e);
         }
     }
 }

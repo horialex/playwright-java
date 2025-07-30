@@ -2,4 +2,6 @@
 allure-report/
 allure-results/
 target/
-
+.vscode
+trace.zip
+*trace.zip

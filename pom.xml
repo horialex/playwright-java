@@ -14,6 +14,7 @@
         <allure.version>2.29.1</allure.version>
         <aspectj.version>1.9.20.1</aspectj.version>
         <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
+        <threads>1</threads>
     </properties>
 
     <dependencyManagement>
@@ -50,6 +51,11 @@
             <artifactId>allure-junit5</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>dotenv-java</artifactId>
+            <version>3.0.0</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -60,7 +66,10 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
                 <configuration>
+                   <!-- <parallel>classesAndMethods</parallel>
+                   <threadCount>${threads}</threadCount> -->
                     <argLine>
+                        -Djunit.jupiter.execution.parallel.config.fixed.parallelism=${threads}
                         -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"
                     </argLine>
                 </configuration>
