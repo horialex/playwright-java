@@ -4,6 +4,11 @@ import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.microsoft.playwright.APIRequest;
+import com.microsoft.playwright.APIRequestContext;
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.BrowserType;
@@ -11,12 +16,12 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.Tracing;
 
-import constants.ProjectConstants;
 import io.qameta.allure.Allure;
 import utils.EnvConfig;
 
-public class BrowserConfig {
+public class PlaywrightConfig {
     protected String browserName;
+    protected String device;
     protected boolean headless;
     protected int slowMo;
     protected String storageStatePath;
@@ -25,7 +30,7 @@ public class BrowserConfig {
     protected Browser browser;
     protected BrowserContext context;
     protected Page page;
-    protected String device;
+    protected APIRequestContext apiRequest;
 
     protected int defaultTimeout;
     protected int navigationTimeout;
@@ -34,13 +39,14 @@ public class BrowserConfig {
     private boolean testFailed = false; // for retain-on-failure
     private String traceFilePath; // 🔹 Unique path per test
 
-    public BrowserConfig() {
+    public PlaywrightConfig() {
         this.browserName = EnvConfig.get("BROWSER").toLowerCase();
         this.headless = Boolean.parseBoolean(EnvConfig.get("HEADLESS"));
         this.slowMo = Integer.parseInt(EnvConfig.get("SLOW_MO"));
 
         this.storageStatePath = System.getProperty("storageStatePath"); // optional
         this.device = EnvConfig.get("DEVICE");
+
         this.defaultTimeout = Integer.parseInt(EnvConfig.get("DEFAULT_TIMEOUT"));
         this.navigationTimeout = Integer.parseInt(EnvConfig.get("NAVIGATION_TIMEOUT"));
 
@@ -104,6 +110,19 @@ public class BrowserConfig {
         }
 
         page = context.newPage();
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Accept", "application/json");
+
+        // String token = EnvConfig.get("API_TOKEN");
+        // if (token != null && !token.isBlank()) {
+        // headers.put("Authorization", "Bearer " + token);
+        // }
+
+        apiRequest = playwright.request().newContext(
+                new APIRequest.NewContextOptions()
+                        .setBaseURL(EnvConfig.get("APP_HOST"))
+                        .setExtraHTTPHeaders(headers));
     }
 
     public void close() {
@@ -113,14 +132,13 @@ public class BrowserConfig {
                     Path tracePath = Paths.get(traceFilePath);
                     Files.createDirectories(tracePath.getParent());
                     context.tracing().stop(new Tracing.StopOptions().setPath(tracePath));
-                    System.out.println("✅ Trace saved to: " + tracePath);
 
                     // ✅ Attach trace.zip to Allure
                     Allure.addAttachment("Playwright Trace", "application/zip",
                             new FileInputStream(tracePath.toFile()), ".zip");
 
                 } else {
-                    context.tracing().stop(); // Stop but don't save
+                    context.tracing().stop();
                 }
             }
         } catch (Exception e) {
@@ -168,5 +186,9 @@ public class BrowserConfig {
 
     public void setTraceFilePath(String traceFilePath) {
         this.traceFilePath = traceFilePath;
+    }
+
+    public APIRequestContext getApiRequest() {
+        return apiRequest;
     }
 }

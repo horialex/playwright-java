@@ -1,5 +1,7 @@
 package pages.HomePage;
 
+import io.qameta.allure.Step;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -81,6 +83,7 @@ public class HomePage extends BasePage {
                 new Page.GetByRoleOptions().setName("Add to Wishlist"));
     }
 
+    @Step("Navigate to login page")
     public void navigateToHomePage() {
         String baseUrl = EnvConfig.get("APP_HOST");
         navigateToUrl(baseUrl + "/");
