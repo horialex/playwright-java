@@ -12,7 +12,7 @@ public class BasePage {
     public void navigateToUrl(String url) {
         page.navigate(url);
     }
-    
+
     protected void waitForPageLoad() {
         page.waitForLoadState();
     }

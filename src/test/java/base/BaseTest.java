@@ -1,73 +1,68 @@
 package base;
 
-import com.microsoft.playwright.Page;
-
-import api.ApiUtils;
-import constants.ProjectConstants;
-import io.qameta.allure.Allure;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.TestInfo;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.api.extension.TestWatcher;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestInfo;
+import com.microsoft.playwright.Browser;
+import com.microsoft.playwright.BrowserContext;
+import com.microsoft.playwright.BrowserType;
+import com.microsoft.playwright.Page;
+import com.microsoft.playwright.Playwright;
+
+import constants.ProjectConstants;
+import io.qameta.allure.Allure;
 
 public class BaseTest {
     protected TestInfo testInfo;
-    protected PlaywrightConfig playwrightConfig;
+    protected Playwright playwright;
+    protected Browser browser;
+    protected BrowserContext context;
     protected Page page;
-    protected ApiUtils apiUtils;
+    protected String storageStatePath = null;
 
     protected String className;
     protected String methodName;
     protected String timestamp;
 
-    @RegisterExtension
-    TestWatcher watcher = new TestWatcher() {
-
-        @Override
-        public void testFailed(ExtensionContext context, Throwable cause) {
-            System.out.println("WATCHER: Test failed");
-            if (playwrightConfig != null) {
-                takeScreenshotAndAttachToReport("failure");
-                playwrightConfig.setTestFailed(true);
-                playwrightConfig.close();
-            }
-        }
-
-        @Override
-        public void testSuccessful(ExtensionContext context) {
-            System.out.println("WATCHER: Test passed");
-            if (playwrightConfig != null) {
-                playwrightConfig.setTestFailed(false);
-                playwrightConfig.close();
-            }
-        }
-    };
-
     @BeforeEach
     public void setUp(TestInfo testInfo) {
         this.testInfo = testInfo;
-        playwrightConfig = new PlaywrightConfig();
+        playwright = Playwright.create();
 
-        // Create unique trace file name per test
         className = testInfo.getTestClass().map(Class::getSimpleName).orElse("UnknownClass");
         methodName = testInfo.getTestMethod().map(Method::getName).orElse("unknownTest");
         timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_SSS"));
 
-        String traceFile = ProjectConstants.TRACE_PATH + "trace_" + className + "_" + methodName + "_" + timestamp
-                + ".zip";
+        browser = playwright.chromium().launch(new BrowserType.LaunchOptions()
+                .setHeadless(false)
+                .setSlowMo(200));
 
-        playwrightConfig.setTraceFilePath(traceFile);
+        if (storageStatePath != null) {
+            context = browser.newContext(
+                    new Browser.NewContextOptions().setViewportSize(1920, 1080)
+                            .setStorageStatePath(Paths.get(storageStatePath)));
+        } else {
+            context = browser.newContext(new Browser.NewContextOptions().setViewportSize(1920, 1080));
+        }
+        page = context.newPage();
+    }
 
-        playwrightConfig.launch();
-        page = playwrightConfig.getPage();
-        this.apiUtils = new ApiUtils(playwrightConfig.getApiRequest());
+    @AfterEach
+    public void tearDown() {
+        if (page != null)
+            page.close();
+        if (context != null)
+            context.close();
+        if (browser != null)
+            browser.close();
+        if (playwright != null)
+            playwright.close();
     }
 
     protected void takeScreenshotAndAttachToReport(String screenshotName) {
@@ -89,4 +84,5 @@ public class BaseTest {
             throw new RuntimeException("Failed to take or attach screenshot", e);
         }
     }
+
 }

@@ -1,15 +1,12 @@
 package pages.HomePage;
 
 import io.qameta.allure.Step;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
-
+import constants.ProjectConstants;
 import pages.BasePage;
-import utils.EnvConfig;
 
 public class HomePage extends BasePage {
     // Header Locators
@@ -85,8 +82,7 @@ public class HomePage extends BasePage {
 
     @Step("Navigate to login page")
     public void navigateToHomePage() {
-        String baseUrl = EnvConfig.get("APP_HOST");
-        navigateToUrl(baseUrl + "/");
+        navigateToUrl(ProjectConstants.BASE_URL + "/");
     }
 
     public void createAccount(String firstName, String lastName, String email, String password) {
