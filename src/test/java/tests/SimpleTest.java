@@ -15,17 +15,17 @@ public class SimpleTest extends BaseTest {
     public void simpleTest1() {
         HomePage homePage = new HomePage(page);
         homePage.navigateToHomePage();
-        page.pause();
+        takeScreenshotAndAttachToReport("wishlist1");
+        // page.pause();
     }
 
-    // @Test
-    // @Disabled
-    // @Description("Basic Simple test 2")
-    // public void simpleTest2() {
-    // HomePage homePage = new HomePage(page);
-    // homePage.navigateToHomePage();
-    // takeScreenshotAndAttachToReport("wishlist2");
-    // }
+    @Test
+    @Description("Basic Simple test 2")
+    public void simpleTest2() {
+        HomePage homePage = new HomePage(page);
+        homePage.navigateToHomePage();
+        takeScreenshotAndAttachToReport("wishlist2");
+    }
 
     // @Test
     // @Disabled

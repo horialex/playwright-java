@@ -1,12 +1,18 @@
 package base;
 
+import java.io.FileInputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
+import com.microsoft.playwright.Tracing;
 
+import constants.ProjectConstants;
+import io.qameta.allure.Allure;
 import utils.EnvConfig;
 
 public class BrowserConfig {
@@ -23,6 +29,10 @@ public class BrowserConfig {
 
     protected int defaultTimeout;
     protected int navigationTimeout;
+    protected String traceMode;
+    protected boolean isTracingEnabled;
+    private boolean testFailed = false; // for retain-on-failure
+    private String traceFilePath; // 🔹 Unique path per test
 
     public BrowserConfig() {
         this.browserName = EnvConfig.get("BROWSER").toLowerCase();
@@ -33,6 +43,9 @@ public class BrowserConfig {
         this.device = EnvConfig.get("DEVICE");
         this.defaultTimeout = Integer.parseInt(EnvConfig.get("DEFAULT_TIMEOUT"));
         this.navigationTimeout = Integer.parseInt(EnvConfig.get("NAVIGATION_TIMEOUT"));
+
+        this.traceMode = EnvConfig.get("TRACE_MODE").toLowerCase(); // e.g. "retain-on-failure"
+        this.isTracingEnabled = traceMode.equals("retain-on-failure");
     }
 
     private Browser.NewContextOptions getDeviceContextOptions() {
@@ -41,12 +54,11 @@ public class BrowserConfig {
                 return new Browser.NewContextOptions()
                         .setViewportSize(375, 667)
                         .setIsMobile(true)
-                        .setHasTouch(true)
-                        .setUserAgent("Mozilla/5.0 (iPhone; CPU iPhone OS 13_2 like Mac OS X)");
+                        .setHasTouch(true);
             case "tablet":
                 return new Browser.NewContextOptions()
                         .setViewportSize(768, 1024)
-                        .setUserAgent("Mozilla/5.0 (iPad; CPU OS 13_2 like Mac OS X)");
+                        .setHasTouch(true);
             case "web":
             default:
                 return new Browser.NewContextOptions()
@@ -84,10 +96,38 @@ public class BrowserConfig {
         context.setDefaultTimeout(defaultTimeout);
         context.setDefaultNavigationTimeout(navigationTimeout);
 
+        if (isTracingEnabled) {
+            context.tracing().start(new Tracing.StartOptions()
+                    .setScreenshots(true)
+                    .setSnapshots(true)
+                    .setSources(true));
+        }
+
         page = context.newPage();
     }
 
     public void close() {
+        try {
+            if (isTracingEnabled && context != null) {
+                if (testFailed && traceFilePath != null) {
+                    Path tracePath = Paths.get(traceFilePath);
+                    Files.createDirectories(tracePath.getParent());
+                    context.tracing().stop(new Tracing.StopOptions().setPath(tracePath));
+                    System.out.println("✅ Trace saved to: " + tracePath);
+
+                    // ✅ Attach trace.zip to Allure
+                    Allure.addAttachment("Playwright Trace", "application/zip",
+                            new FileInputStream(tracePath.toFile()), ".zip");
+
+                } else {
+                    context.tracing().stop(); // Stop but don't save
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error stopping tracing: " + e.getMessage());
+            e.printStackTrace();
+        }
+
         if (page != null)
             page.close();
         if (context != null)
@@ -120,5 +160,13 @@ public class BrowserConfig {
 
     public void setStorageStatePath(String storageStatePath) {
         this.storageStatePath = storageStatePath;
+    }
+
+    public void setTestFailed(boolean testFailed) {
+        this.testFailed = testFailed;
+    }
+
+    public void setTraceFilePath(String traceFilePath) {
+        this.traceFilePath = traceFilePath;
     }
 }
